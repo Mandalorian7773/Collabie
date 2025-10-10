@@ -1,11 +1,11 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
-import ProtectedRoute from './Components/ProtectedRoute';
+import ProtectedRoute from './components/ProtectedRoute.jsx';
 import Login from './Pages/Login';
 import Register from './Pages/Register';
 import Dashboard from './Pages/Dashboard';
-import NavBar from './Components/NavBar';
+import NavBar from './components/NavBar';
 import './index.css';
 
 function App() {
