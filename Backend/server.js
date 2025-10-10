@@ -5,7 +5,7 @@ import { Server } from 'socket.io';
 import connectDB from './src/config/db.js';
 import initSockets from './src/sockets/chatSocket.js';
 import app from './src/app.js';
-import createApolloServer from './src/graphql/graphqlServer.js';
+import { createApolloServer, expressMiddleware } from './src/graphql/graphqlServer.js';
 
 dotenv.config();
 
@@ -34,32 +34,52 @@ const io = new Server(server, {
 initSockets(io);
 
 // Set up GraphQL server
-const apolloServer = createApolloServer();
-
-// Start the server
-const PORT = process.env.PORT || 3001;
-
-server.listen(PORT, async () => {
-    try {
-        // Start Apollo Server
-        await apolloServer.start();
-        
-        // Apply GraphQL middleware
-        apolloServer.applyMiddleware({ 
-            app, 
-            path: '/graphql',
-            cors: {
-                origin: corsOrigins,
-                credentials: true
+const startServer = async () => {
+  try {
+    const apolloServer = await createApolloServer();
+    
+    // Apply GraphQL middleware
+    app.use(
+      '/graphql',
+      expressMiddleware(apolloServer, {
+        context: async ({ req }) => {
+          // Get the user token from the headers
+          const token = req.headers.authorization || '';
+          
+          // Try to retrieve a user with the token
+          let user = null;
+          if (token && token.startsWith('Bearer ')) {
+            // Extract the token
+            const jwtToken = token.substring(7);
+            
+            // In a real implementation, you would verify the JWT token here
+            // For now, we'll just attach the user from the request if it exists
+            user = req.user || null;
+          }
+          
+          return {
+            user,
+            models: {
+              User: {} // You would import and use your actual User model here
             }
-        });
-        
-        console.log(`🚀 Server running on port ${PORT}`);
-        console.log(`🌐 Socket.IO enabled on port ${PORT}`);
-        console.log(`🔗 GraphQL endpoint available at http://localhost:${PORT}/graphql`);
-        console.log(`🔗 API endpoints available at http://localhost:${PORT}/api`);
-    } catch (error) {
-        console.error('❌ Error starting server:', error);
-        process.exit(1);
-    }
-});
+          };
+        }
+      })
+    );
+    
+    // Start the server
+    const PORT = process.env.PORT || 3001;
+    
+    server.listen(PORT, () => {
+      console.log(`🚀 Server running on port ${PORT}`);
+      console.log(`🌐 Socket.IO enabled on port ${PORT}`);
+      console.log(`🔗 GraphQL endpoint available at http://localhost:${PORT}/graphql`);
+      console.log(`🔗 API endpoints available at http://localhost:${PORT}/api`);
+    });
+  } catch (error) {
+    console.error('❌ Error starting server:', error);
+    process.exit(1);
+  }
+};
+
+startServer();

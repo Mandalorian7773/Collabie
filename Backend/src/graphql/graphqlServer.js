@@ -1,4 +1,5 @@
-import { ApolloServer } from 'apollo-server-express';
+import { ApolloServer } from '@apollo/server';
+import { expressMiddleware } from '@apollo/server/express4';
 import { makeExecutableSchema } from '@graphql-tools/schema';
 import callSchema from './callSchema.js';
 import callResolvers from './callResolvers.js';
@@ -44,13 +45,16 @@ const createContext = async ({ req }) => {
 };
 
 // Create Apollo Server
-const createApolloServer = () => {
-  return new ApolloServer({
+const createApolloServer = async () => {
+  const server = new ApolloServer({
     schema,
-    context: createContext,
     introspection: process.env.NODE_ENV !== 'production',
-    playground: process.env.NODE_ENV !== 'production'
   });
+  
+  // Start the server
+  await server.start();
+  
+  return server;
 };
 
-export default createApolloServer;
+export { createApolloServer, expressMiddleware };
