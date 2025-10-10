@@ -3,7 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import authService from '../services/authService';
 import messageService from '../services/messageService';
 import socket from '../../socket.js';
-import AddUserForm from '../components/AddUserForm';
+import AddUserForm from '../Components/AddUserForm';
 import Chat from "./Chat";
 
 function Dashboard() {

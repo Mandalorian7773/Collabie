@@ -1,0 +1,8 @@
+/*    /index.html   200
+
+# Set correct MIME types for JavaScript modules
+*.js    Content-Type: application/javascript; charset=utf-8
+*.jsx   Content-Type: application/javascript; charset=utf-8
+*.mjs   Content-Type: application/javascript; charset=utf-8
+*.ts    Content-Type: application/javascript; charset=utf-8
+*.tsx   Content-Type: application/javascript; charset=utf-8

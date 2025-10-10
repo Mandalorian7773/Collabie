@@ -1,0 +1,14 @@
+Options -MultiViews
+RewriteEngine On
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^ index.html [QSA,L]
+
+# Set correct MIME types for JavaScript files
+<FilesMatch "\.(js|jsx|mjs)$">
+    Header set Content-Type "application/javascript; charset=utf-8"
+</FilesMatch>
+
+# Security headers
+Header always set X-Content-Type-Options nosniff
+Header always set X-Frame-Options DENY
+Header always set X-XSS-Protection "1; mode=block"

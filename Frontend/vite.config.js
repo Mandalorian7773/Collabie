@@ -11,4 +11,25 @@ export default defineConfig({
     }),
     tailwindcss(),
   ],
+  server: {
+    host: true,
+    port: 5173,
+    hmr: {
+      port: 5173
+    }
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: undefined,
+        assetFileNames: 'assets/[name].[hash][extname]',
+        chunkFileNames: 'assets/[name].[hash].js',
+        entryFileNames: 'assets/[name].[hash].js'
+      }
+    },
+    assetsDir: 'assets'
+  },
+  resolve: {
+    extensions: ['.js', '.jsx', '.ts', '.tsx', '.json']
+  }
 })
