@@ -45,7 +45,7 @@ app.get('/', (req, res) => {
             users: '/api/users',
             messages: '/api/messages',
             calls: '/api/calls',
-            friends: '/api/friends'
+            friends: '/api/friends'  // Friend system endpoints
         }
     });
 });
