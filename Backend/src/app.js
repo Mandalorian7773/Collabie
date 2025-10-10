@@ -18,23 +18,15 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
 
 // Allow CORS from any origin (development only - restrict in production)
-app.use(cors({
+const corsOptions = {
     origin: true, // Allow all origins
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     exposedHeaders: ['Authorization']
-}));
+};
 
-// Explicitly handle preflight requests
-app.options('*', cors({
-    origin: true, // Allow all origins
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    exposedHeaders: ['Authorization']
-}));
-
+app.use(cors(corsOptions));
 app.use(morgan('combined'));
 
 
