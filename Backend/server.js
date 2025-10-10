@@ -14,24 +14,37 @@ connectDB();
 
 const server = http.createServer(app);
 
-// Enhanced Socket.IO CORS configuration to allow all origins during development
+// Enhanced Socket.IO CORS configuration to allow localhost origins for development
 const corsOrigins = process.env.CORS_ORIGIN 
   ? process.env.CORS_ORIGIN.split(',').map(origin => origin.trim())
-  : process.env.NODE_ENV === 'development'
-    ? true // Allow all origins in development
-    : [
-        'http://localhost:5173',
-        'http://localhost:5174', 
-        'http://localhost:5175',
-        'https://colabie.netlify.app'
-      ];
+  : [
+      'http://localhost:5173',
+      'http://localhost:5174', 
+      'http://localhost:5175',
+      'https://colabie.netlify.app',
+      // Allow all localhost origins for development
+      ...(process.env.NODE_ENV === 'development' ? ['*'] : [])
+    ];
+
+// Always allow localhost origins for development/testing
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:5174', 
+  'http://localhost:5175',
+  'https://colabie.netlify.app'
+];
+
+// In development, allow all origins
+const socketCorsOptions = {
+  origin: process.env.NODE_ENV === 'development' 
+    ? '*' 
+    : allowedOrigins,
+  methods: ["GET", "POST"],
+  credentials: true
+};
 
 const io = new Server(server, {
-    cors: {
-        origin: corsOrigins,
-        methods: ["GET", "POST"],
-        credentials: true
-    }
+    cors: socketCorsOptions
 });
 
 initSockets(io);
