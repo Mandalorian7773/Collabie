@@ -1,14 +1,16 @@
 // Environment configuration
 const config = {
     // API Configuration
-    API_BASE_URL: import.meta.env.VITE_API_BASE_URL || 'https://collabie.onrender.com',
-    SOCKET_URL: import.meta.env.VITE_SOCKET_URL || 'https://collabie.onrender.com',
+    API_BASE_URL: import.meta.env.VITE_API_BASE_URL || (import.meta.env.MODE === 'development' ? 'http://localhost:3001' : 'https://collabie.onrender.com'),
+    SOCKET_URL: import.meta.env.VITE_SOCKET_URL || (import.meta.env.MODE === 'development' ? 'http://localhost:3001' : 'https://collabie.onrender.com'),
     
     // App Configuration
     APP_NAME: import.meta.env.VITE_APP_NAME || 'Collabie',
     
     // Environment
     NODE_ENV: import.meta.env.MODE || 'development',
+    IS_DEVELOPMENT: import.meta.env.MODE === 'development',
+    IS_PRODUCTION: import.meta.env.MODE === 'production',
 };
 
 export default config;
