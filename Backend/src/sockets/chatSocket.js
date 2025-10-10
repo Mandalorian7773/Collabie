@@ -1,10 +1,10 @@
 import Message from '../models/messageModel.js';
-
+import initCallSockets from './callSocket.js';
 
 const initSockets = (io) => {
+    // Initialize chat sockets
     io.on('connection', (socket) => {
         console.log(`✅ New socket connected: ${socket.id}`);
-
 
         socket.on('join', (userId) => {
             if (userId) {
@@ -16,17 +16,14 @@ const initSockets = (io) => {
             }
         });
 
-
         socket.on('test', (data) => {
             console.log('🧪 Test event received:', data);
             socket.emit('testResponse', 'Backend received your test!');
         });
 
-
         socket.on('sendMessage', async (data) => {
             try {
                 const { sender, receiver, content, messageType = 'text' } = data;
-
 
                 if (!sender || !receiver || !content) {
                     socket.emit('error', { 
@@ -34,7 +31,6 @@ const initSockets = (io) => {
                     });
                     return;
                 }
-
 
                 const message = await Message.create({
                     chatId: receiver,
@@ -45,7 +41,6 @@ const initSockets = (io) => {
 
                 console.log(`💬 Message saved: ${sender} → ${receiver}: ${content}`);
 
-
                 const messageData = {
                     _id: message._id,
                     senderId: message.senderId,
@@ -55,10 +50,8 @@ const initSockets = (io) => {
                     read: message.read
                 };
 
-
                 io.to(receiver).emit('receiveMessage', messageData);
                 
-
                 if (sender !== receiver) {
                     io.to(sender).emit('receiveMessage', messageData);
                 }
@@ -74,7 +67,6 @@ const initSockets = (io) => {
             }
         });
 
-
         socket.on('markAsRead', async (data) => {
             try {
                 const { chatId, userId } = data;
@@ -85,7 +77,6 @@ const initSockets = (io) => {
                     });
                     return;
                 }
-
 
                 const result = await Message.updateMany(
                     { 
@@ -98,14 +89,12 @@ const initSockets = (io) => {
 
                 console.log(`📖 Marked ${result.modifiedCount} messages as read for user ${userId} from ${chatId}`);
 
-
                 io.to(chatId).emit('messagesMarkedAsRead', {
                     readBy: userId,
                     chatId: chatId,
                     markedCount: result.modifiedCount,
                     timestamp: new Date()
                 });
-
 
                 socket.emit('readStatusUpdated', {
                     success: true,
@@ -122,7 +111,6 @@ const initSockets = (io) => {
             }
         });
 
-
         socket.on('typing', (data) => {
             const { userId, chatId, isTyping } = data;
             if (chatId) {
@@ -134,7 +122,6 @@ const initSockets = (io) => {
             }
         });
 
-
         socket.on('updateOnlineStatus', (data) => {
             const { userId, isOnline } = data;
 
@@ -145,7 +132,6 @@ const initSockets = (io) => {
             });
         });
 
-
         socket.on('leave', (userId) => {
             if (userId) {
                 socket.leave(userId);
@@ -153,16 +139,17 @@ const initSockets = (io) => {
             }
         });
 
-
         socket.on('disconnect', () => {
             console.log(`❌ Socket disconnected: ${socket.id}`);
         });
-
 
         socket.on('error', (error) => {
             console.error(`🔥 Socket error for ${socket.id}:`, error);
         });
     });
+
+    // Initialize call sockets
+    initCallSockets(io);
 
     console.log('🚀 Socket.IO initialized and ready for connections');
 };
