@@ -17,13 +17,25 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
 
-
+// Enhanced CORS configuration to allow all origins and endpoints
 const corsOptions = {
-    origin: true, // Allow all origins
+    origin: function (origin, callback) {
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
+        
+        // Allow all origins in development
+        if (process.env.NODE_ENV === 'development') {
+            return callback(null, true);
+        }
+        
+        // Allow all origins in production (you might want to restrict this in production)
+        return callback(null, true);
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    exposedHeaders: ['Authorization']
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+    exposedHeaders: ['Authorization'],
+    optionsSuccessStatus: 200 // Some legacy browsers (IE11, various SmartTVs) choke on 204
 };
 
 app.use(cors(corsOptions));
@@ -34,6 +46,16 @@ app.use('/api/users', userRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/calls', callRoutes);
 app.use('/api/friends', friendRoutes);
+
+// Health check endpoint for deployment platforms
+app.get('/api/health', (req, res) => {
+    res.status(200).json({ 
+        status: 'healthy',
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime(),
+        environment: process.env.NODE_ENV || 'development'
+    });
+});
 
 app.get('/', (req, res) => {
     res.json({ 
@@ -106,16 +128,6 @@ app.use((err, req, res, next) => {
     res.status(500).json({ 
         error: 'Internal server error',
         message: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong'
-    });
-});
-
-// Health check endpoint for deployment platforms
-app.get('/api/health', (req, res) => {
-    res.status(200).json({ 
-        status: 'healthy',
-        timestamp: new Date().toISOString(),
-        uptime: process.uptime(),
-        environment: process.env.NODE_ENV || 'development'
     });
 });
 

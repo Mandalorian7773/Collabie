@@ -5,7 +5,8 @@ import { Server } from 'socket.io';
 import connectDB from './src/config/db.js';
 import initSockets from './src/sockets/chatSocket.js';
 import app from './src/app.js';
-import { createApolloServer, expressMiddleware } from './src/graphql/graphqlServer.js';
+// Temporarily comment out GraphQL imports
+// import { createApolloServer, expressMiddleware } from './src/graphql/graphqlServer.js';
 
 dotenv.config();
 
@@ -13,15 +14,17 @@ connectDB();
 
 const server = http.createServer(app);
 
-// Enhanced Socket.IO CORS configuration
+// Enhanced Socket.IO CORS configuration to allow all origins during development
 const corsOrigins = process.env.CORS_ORIGIN 
   ? process.env.CORS_ORIGIN.split(',').map(origin => origin.trim())
-  : [
-      'http://localhost:5173',
-      'http://localhost:5174', 
-      'http://localhost:5175',
-      'https://colabie.netlify.app'
-    ];
+  : process.env.NODE_ENV === 'development'
+    ? true // Allow all origins in development
+    : [
+        'http://localhost:5173',
+        'http://localhost:5174', 
+        'http://localhost:5175',
+        'https://colabie.netlify.app'
+      ];
 
 const io = new Server(server, {
     cors: {
@@ -36,6 +39,8 @@ initSockets(io);
 // Set up GraphQL server
 const startServer = async () => {
   try {
+    // Temporarily comment out GraphQL initialization
+    /*
     const apolloServer = await createApolloServer();
     
     // Apply GraphQL middleware
@@ -66,6 +71,7 @@ const startServer = async () => {
         }
       })
     );
+    */
     
     // Start the server
     const PORT = process.env.PORT || 3001;
@@ -73,7 +79,8 @@ const startServer = async () => {
     server.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);
       console.log(`🌐 Socket.IO enabled on port ${PORT}`);
-      console.log(`🔗 GraphQL endpoint available at http://localhost:${PORT}/graphql`);
+      // Temporarily comment out GraphQL endpoint message
+      // console.log(`🔗 GraphQL endpoint available at http://localhost:${PORT}/graphql`);
       console.log(`🔗 API endpoints available at http://localhost:${PORT}/api`);
     });
   } catch (error) {
