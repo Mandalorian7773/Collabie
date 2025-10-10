@@ -12,9 +12,10 @@ connectDB();
 
 const server = http.createServer(app);
 
+// Allow Socket.IO connections from any origin (development only - restrict in production)
 const io = new Server(server, {
     cors: {
-        origin: process.env.CORS_ORIGIN?.split(',') || ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:5175', 'https://colabie.netlify.app'],
+        origin: true, // Allow all origins
         methods: ["GET", "POST"],
         credentials: true
     }
