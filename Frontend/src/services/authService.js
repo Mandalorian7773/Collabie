@@ -50,7 +50,7 @@ api.interceptors.response.use(
             originalRequest._retry = true;
             
             try {
-                const refreshResponse = await api.post('/auth/refresh');
+                const refreshResponse = await api.post('/api/auth/refresh');
                 const { accessToken } = refreshResponse.data.tokens;
                 
                 tokenStorage.setToken(accessToken);
@@ -74,7 +74,7 @@ const authService = {
 
     async register(userData) {
         try {
-            const response = await api.post('/auth/register', userData);
+            const response = await api.post('/api/auth/register', userData);
             
             if (response.data.success) {
                 const { user, tokens } = response.data;
@@ -97,7 +97,7 @@ const authService = {
 
     async login(credentials) {
         try {
-            const response = await api.post('/auth/login', credentials);
+            const response = await api.post('/api/auth/login', credentials);
             
             if (response.data.success) {
                 const { user, tokens } = response.data;
@@ -120,7 +120,7 @@ const authService = {
 
     async logout() {
         try {
-            await api.post('/auth/logout');
+            await api.post('/api/auth/logout');
         } catch (error) {
             console.error('Logout error:', error);
         } finally {
@@ -131,7 +131,7 @@ const authService = {
 
     async logoutAll() {
         try {
-            await api.post('/auth/logout-all');
+            await api.post('/api/auth/logout-all');
         } catch (error) {
             console.error('Logout all error:', error);
         } finally {
@@ -142,7 +142,7 @@ const authService = {
 
     async getProfile() {
         try {
-            const response = await api.get('/auth/me');
+            const response = await api.get('/api/auth/me');
             
             if (response.data.success) {
                 const { user } = response.data;
@@ -163,7 +163,7 @@ const authService = {
 
     async updateProfile(profileData) {
         try {
-            const response = await api.put('/auth/profile', profileData);
+            const response = await api.put('/api/auth/profile', profileData);
             
             if (response.data.success) {
                 const { user } = response.data;
@@ -184,7 +184,7 @@ const authService = {
 
     async changePassword(passwordData) {
         try {
-            const response = await api.put('/auth/change-password', passwordData);
+            const response = await api.put('/api/auth/change-password', passwordData);
             
             if (response.data.success) {
                 return { success: true, message: response.data.message };
@@ -203,7 +203,7 @@ const authService = {
 
     async getConversations() {
         try {
-            const response = await api.get('/users/conversations');
+            const response = await api.get('/api/users/conversations');
             
             if (response.data.success) {
                 return { 
@@ -231,7 +231,7 @@ const authService = {
             if (params.limit) queryParams.append('limit', params.limit);
             if (params.search) queryParams.append('search', params.search);
             
-            const response = await api.get(`/users?${queryParams}`);
+            const response = await api.get(`/api/users?${queryParams}`);
             
             if (response.data.success) {
                 return { 
@@ -254,7 +254,7 @@ const authService = {
 
     async addUser(username) {
         try {
-            const response = await api.post('/users/add', { username });
+            const response = await api.post('/api/users/add', { username });
             
             if (response.data.success) {
                 return { 
@@ -277,7 +277,7 @@ const authService = {
 
     async searchUsers(username) {
         try {
-            const response = await api.get(`/users/search?username=${encodeURIComponent(username)}`);
+            const response = await api.get(`/api/users/search?username=${encodeURIComponent(username)}`);
             
             if (response.data.success) {
                 return { 

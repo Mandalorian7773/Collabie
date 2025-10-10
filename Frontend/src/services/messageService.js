@@ -3,7 +3,7 @@ import { api } from './authService.js';
 const messageService = {
     async sendMessage(messageData) {
         try {
-            const response = await api.post('/messages', messageData);
+            const response = await api.post('/api/messages', messageData);
             
             if (response.data.success) {
                 return { 
@@ -31,7 +31,7 @@ const messageService = {
                 markRead: markRead.toString()
             });
             
-            const response = await api.get(`/messages/${userId1}/${userId2}?${queryParams}`);
+            const response = await api.get(`/api/messages/${userId1}/${userId2}?${queryParams}`);
             
             if (response.data.success) {
                 return { 
@@ -53,7 +53,7 @@ const messageService = {
 
     async markAsRead(chatId, userId) {
         try {
-            const response = await api.put('/messages/read', { chatId, userId });
+            const response = await api.put('/api/messages/read', { chatId, userId });
             
             if (response.data.success) {
                 return { 
@@ -74,7 +74,7 @@ const messageService = {
 
     async getUnreadCount(chatId, userId) {
         try {
-            const response = await api.get(`/messages/unread/${chatId}/${userId}`);
+            const response = await api.get(`/api/messages/unread/${chatId}/${userId}`);
             
             if (response.data.success) {
                 return { 
