@@ -257,7 +257,6 @@ export const getConversations = async (req, res) => {
         const conversationsWithLastMessage = await Promise.all(
             conversationPartners.map(async (partner) => {
                 const partnerId = partner._id.toString();
-                // Get the last message between current user and this partner
                 const lastMessage = await Message.findOne({
                     $or: [
                         { senderId: currentUserId, chatId: partnerId },

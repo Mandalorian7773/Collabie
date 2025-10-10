@@ -47,24 +47,17 @@ function Chat({ currentUser, activeUser }) {
     useEffect(() => {
         if (!currentUser) return;
 
-        console.log('[SOCKET] Setting up socket listeners for user:', currentUser._id);
-        console.log('[SOCKET] Socket connected?', socket.connected);
-        
         socket.emit('join', currentUser._id);
-        console.log('[SOCKET] Emitted join event for user:', currentUser._id);
 
         const handleReceiveMessage = (messageData) => {
-            console.log('[SOCKET] Received message via Socket.IO:', messageData);
             setMessages(prev => {
                 const messageExists = prev.some(msg => msg._id === messageData._id);
                 if (messageExists) {
-                    console.log('[SOCKET] Message already exists, skipping');
                     return prev;
                 }
                 const newMessages = [...prev, messageData];
                 
                 if (messageData.senderId === activeUser?._id) {
-                    console.log('[read] Auto-marking message as read (real-time)');
                     socket.emit('markAsRead', {
                         chatId: messageData.senderId,
                         userId: currentUser._id
@@ -76,7 +69,6 @@ function Chat({ currentUser, activeUser }) {
         };
 
         const handleMessagesMarkedAsRead = (data) => {
-            console.log('[READ] Messages marked as read (real-time):', data);
             setMessages(prev => prev.map(msg => {
                 if (msg.senderId === currentUser._id && data.readBy === activeUser?._id) {
                     return { ...msg, read: true };
@@ -92,21 +84,18 @@ function Chat({ currentUser, activeUser }) {
         };
 
         const handleReadStatusUpdated = (data) => {
-            console.log('[read] Read status updated:', data);
         };
 
         socket.on('receiveMessage', handleReceiveMessage);
         socket.on('messagesMarkedAsRead', handleMessagesMarkedAsRead);
         socket.on('userTyping', handleUserTyping);
         socket.on('readStatusUpdated', handleReadStatusUpdated);
-        console.log('[SOCKET] Added real-time socket listeners');
 
         socket.on('error', (error) => {
             console.error('Socket error:', error);
         });
 
         return () => {
-            console.log('[SOCKET] Cleaning up socket listeners');
             socket.off('receiveMessage', handleReceiveMessage);
             socket.off('messagesMarkedAsRead', handleMessagesMarkedAsRead);
             socket.off('userTyping', handleUserTyping);
@@ -118,7 +107,6 @@ function Chat({ currentUser, activeUser }) {
     useEffect(() => {
         if (!currentUser || !activeUser) return;
         
-        console.log('[read] Marking messages as read for conversation with:', activeUser.name);
         socket.emit('markAsRead', {
             chatId: activeUser._id,
             userId: currentUser._id
@@ -152,8 +140,6 @@ function Chat({ currentUser, activeUser }) {
             if (!result.success) {
                 throw new Error(result.error || 'Failed to send message via API');
             }
-
-            console.log('[SUCCESS] Message sent successfully via API');
 
             setInput("");
         } catch (error) {
