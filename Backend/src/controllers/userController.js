@@ -247,9 +247,11 @@ export const getConversations = async (req, res) => {
             ...conversationPartnerIds,
             ...friends.map(friend => {
                 // Get the friend's ID (not the current user's ID)
-                return friend.requester.toString() === currentUserId 
-                    ? friend.recipient.toString() 
-                    : friend.requester.toString();
+                // Since the objects are populated, we need to get the _id property
+                const requesterId = friend.requester._id ? friend.requester._id.toString() : friend.requester.toString();
+                const recipientId = friend.recipient._id ? friend.recipient._id.toString() : friend.recipient.toString();
+                
+                return requesterId === currentUserId ? recipientId : requesterId;
             })
         ])];
 
@@ -287,10 +289,11 @@ export const getConversations = async (req, res) => {
                 });
 
                 // Check if this is a friend
-                const isFriend = friends.some(friend => 
-                    friend.requester.toString() === partnerId || 
-                    friend.recipient.toString() === partnerId
-                );
+                const isFriend = friends.some(friend => {
+                    const requesterId = friend.requester._id ? friend.requester._id.toString() : friend.requester.toString();
+                    const recipientId = friend.recipient._id ? friend.recipient._id.toString() : friend.recipient.toString();
+                    return requesterId === partnerId || recipientId === partnerId;
+                });
 
                 const isOnline = partner.lastActive && 
                     (Date.now() - new Date(partner.lastActive).getTime()) < 5 * 60 * 1000;
