@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import authService from '../services/authService';
+import friendService from '../services/friendService';
 
 function AddUserForm({ onUserAdded, onError }) {
     const [username, setUsername] = useState('');
@@ -28,20 +28,19 @@ function AddUserForm({ onUserAdded, onError }) {
         setIsLoading(true);
 
         try {
-            const result = await authService.addUser(username);
+            const result = await friendService.sendFriendRequest(username);
             
             if (result.success) {
-                onUserAdded(result.user);
+                onUserAdded(result.friendRequest);
                 setUsername('');
                 setSuggestions([]);
             } else {
-                onError(result.error || 'Failed to add user');
+                onError(result.error || 'Failed to send friend request');
             }
         } catch (error) {
-
-            const errorMessage = error.response?.data?.error || error.message || 'Failed to add user';
+            const errorMessage = error.response?.data?.error || error.message || 'Failed to send friend request';
             onError(errorMessage);
-            console.error('Add user error:', error);
+            console.error('Send friend request error:', error);
         } finally {
             setIsLoading(false);
         }
@@ -51,17 +50,12 @@ function AddUserForm({ onUserAdded, onError }) {
         const value = e.target.value;
         setUsername(value);
 
-
         if (value.length >= 2) {
             try {
-                const result = await authService.searchUsers(value);
-                if (result.success) {
-                    setSuggestions(result.users);
-                    setShowSuggestions(true);
-                } else {
-                    setSuggestions([]);
-                    setShowSuggestions(false);
-                }
+                // We'll need to create a search endpoint for users
+                // For now, we'll just clear suggestions
+                setSuggestions([]);
+                setShowSuggestions(false);
             } catch (error) {
                 console.error('Search error:', error);
                 setSuggestions([]);
@@ -91,7 +85,6 @@ function AddUserForm({ onUserAdded, onError }) {
                         value={username}
                         onChange={handleUsernameChange}
                         onBlur={() => {
-
                             setTimeout(() => setShowSuggestions(false), 200);
                         }}
                         onFocus={() => {
@@ -104,7 +97,6 @@ function AddUserForm({ onUserAdded, onError }) {
                         autoComplete="off"
                     />
                     
-
                     {showSuggestions && suggestions.length > 0 && (
                         <div className="absolute top-full left-0 right-0 z-10 mt-1 bg-zinc-800 border border-zinc-600 rounded-lg shadow-lg max-h-40 overflow-y-auto">
                             <div className="px-3 py-2 text-xs text-zinc-400 border-b border-zinc-600">
@@ -143,10 +135,10 @@ function AddUserForm({ onUserAdded, onError }) {
                     {isLoading ? (
                         <span className="flex items-center justify-center">
                             <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2"></div>
-                            Adding...
+                            Sending Request...
                         </span>
                     ) : (
-                        'Add Friend'
+                        'Send Friend Request'
                     )}
                 </button>
             </form>
@@ -155,7 +147,7 @@ function AddUserForm({ onUserAdded, onError }) {
                 Username can only contain letters, numbers, and underscores (3-20 characters)
             </p>
             <p className="text-xs text-zinc-500 mt-1">
-                [PRIVATE] Only users you add as friends will appear in your chat list
+                Send a friend request to connect with other users
             </p>
         </div>
     );

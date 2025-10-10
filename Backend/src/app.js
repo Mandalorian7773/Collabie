@@ -6,12 +6,12 @@ import cookieParser from 'cookie-parser';
 import messageRoutes from './routes/messageRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import userRoutes from './routes/userRoutes.js';
+import callRoutes from './routes/callRoutes.js';
+import friendRoutes from './routes/friendRoutes.js';
 
 const app = express();
 
-
 app.use(helmet());
-
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
@@ -29,11 +29,11 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(morgan('combined'));
 
-
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/messages', messageRoutes);
-
+app.use('/api/calls', callRoutes);
+app.use('/api/friends', friendRoutes);
 
 app.get('/', (req, res) => {
     res.json({ 
@@ -43,11 +43,12 @@ app.get('/', (req, res) => {
         endpoints: {
             auth: '/api/auth',
             users: '/api/users',
-            messages: '/api/messages'
+            messages: '/api/messages',
+            calls: '/api/calls',
+            friends: '/api/friends'
         }
     });
 });
-
 
 app.get('/api', (req, res) => {
     res.json({
@@ -72,11 +73,26 @@ app.get('/api', (req, res) => {
             messages: {
                 send: 'POST /api/messages',
                 getMessages: 'GET /api/messages/:userId1/:userId2'
+            },
+            calls: {
+                startCall: 'POST /api/calls/start',
+                joinCall: 'POST /api/calls/join/:callId',
+                leaveCall: 'POST /api/calls/leave/:callId',
+                endCall: 'POST /api/calls/end/:callId',
+                getActiveCallsByRoom: 'GET /api/calls/room/:roomId',
+                getActiveCallsByUser: 'GET /api/calls/user/:userId'
+            },
+            friends: {
+                sendRequest: 'POST /api/friends/request',
+                acceptRequest: 'POST /api/friends/accept/:requestId',
+                declineRequest: 'POST /api/friends/decline/:requestId',
+                getFriends: 'GET /api/friends',
+                getPendingRequests: 'GET /api/friends/pending',
+                removeFriend: 'DELETE /api/friends/:friendId'
             }
         }
     });
 });
-
 
 app.use((req, res) => {
     res.status(404).json({ 
@@ -84,7 +100,6 @@ app.use((req, res) => {
         path: req.originalUrl 
     });
 });
-
 
 app.use((err, req, res, next) => {
     console.error('Global error:', err);

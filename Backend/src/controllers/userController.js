@@ -1,6 +1,6 @@
 import User from '../models/userModel.js';
 import Message from '../models/messageModel.js';
-
+import Friend from '../models/friendModel.js';
 
 export const addUser = async (req, res) => {
     try {
@@ -232,31 +232,44 @@ export const getConversations = async (req, res) => {
 
         const currentUserId = req.user._id.toString();
 
-
+        // Get friends
+        const friends = await Friend.getFriends(currentUserId);
+        
+        // Get conversation partners from messages
         const sentMessages = await Message.distinct('chatId', { senderId: currentUserId });
         const receivedMessages = await Message.distinct('senderId', { chatId: currentUserId });
         
-
         const conversationPartnerIds = [...new Set([...sentMessages, ...receivedMessages])]
             .filter(id => id !== currentUserId);
 
-        if (conversationPartnerIds.length === 0) {
+        // Combine friends and conversation partners
+        const allContactIds = [...new Set([
+            ...conversationPartnerIds,
+            ...friends.map(friend => {
+                // Get the friend's ID (not the current user's ID)
+                return friend.requester.toString() === currentUserId 
+                    ? friend.recipient.toString() 
+                    : friend.requester.toString();
+            })
+        ])];
+
+        if (allContactIds.length === 0) {
             return res.status(200).json({
                 success: true,
                 conversations: []
             });
         }
 
-
         const conversationPartners = await User.find({
-            _id: { $in: conversationPartnerIds }
+            _id: { $in: allContactIds }
         })
         .select('username email avatar role lastActive createdAt');
-
 
         const conversationsWithLastMessage = await Promise.all(
             conversationPartners.map(async (partner) => {
                 const partnerId = partner._id.toString();
+                
+                // Get last message if exists
                 const lastMessage = await Message.findOne({
                     $or: [
                         { senderId: currentUserId, chatId: partnerId },
@@ -266,13 +279,18 @@ export const getConversations = async (req, res) => {
                 .sort({ createdAt: -1 })
                 .select('content createdAt senderId messageType');
 
-
+                // Get unread count
                 const unreadCount = await Message.countDocuments({
                     senderId: partnerId,
                     chatId: currentUserId,
                     read: false
                 });
 
+                // Check if this is a friend
+                const isFriend = friends.some(friend => 
+                    friend.requester.toString() === partnerId || 
+                    friend.recipient.toString() === partnerId
+                );
 
                 const isOnline = partner.lastActive && 
                     (Date.now() - new Date(partner.lastActive).getTime()) < 5 * 60 * 1000;
@@ -291,13 +309,18 @@ export const getConversations = async (req, res) => {
                         fromMe: lastMessage.senderId === currentUserId,
                         messageType: lastMessage.messageType
                     } : null,
-                    unreadCount
+                    unreadCount,
+                    isFriend: isFriend || false
                 };
             })
         );
 
-
+        // Sort by last activity (message or lastActive)
         conversationsWithLastMessage.sort((a, b) => {
+            // Prioritize friends without messages
+            if (a.isFriend && !a.lastMessage && b.lastMessage) return -1;
+            if (b.isFriend && !b.lastMessage && a.lastMessage) return 1;
+            
             const aTime = a.lastMessage ? new Date(a.lastMessage.timestamp) : new Date(a.lastActive || 0);
             const bTime = b.lastMessage ? new Date(b.lastMessage.timestamp) : new Date(b.lastActive || 0);
             return bTime - aTime;
