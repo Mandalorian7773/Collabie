@@ -17,7 +17,7 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
 
-// Allow CORS from any origin (development only - restrict in production)
+
 const corsOptions = {
     origin: true, // Allow all origins
     credentials: true,
@@ -45,7 +45,7 @@ app.get('/', (req, res) => {
             users: '/api/users',
             messages: '/api/messages',
             calls: '/api/calls',
-            friends: '/api/friends'  // Friend system endpoints
+            friends: '/api/friends'  
         }
     });
 });
