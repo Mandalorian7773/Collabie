@@ -21,7 +21,7 @@ const io = new Server(server, {
 
 initSockets(io);
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 3001;
 
 server.listen(PORT, () => {
     console.log(`🚀 Server running on port ${PORT}`);
