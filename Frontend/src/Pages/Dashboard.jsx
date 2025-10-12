@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import authService from '../services/authService';
 import messageService from '../services/messageService';
 import socket from '../../socket.js';
 import AddUserForm from '../components/AddUserForm';
+import PendingRequests from '../components/PendingRequests';
 import Chat from "./Chat";
 
 function Dashboard() {
@@ -96,8 +98,11 @@ function Dashboard() {
         await logout();
     };
 
-    const handleUserAdded = (newUser) => {
-        setMessage({ type: 'success', text: `User "${newUser.username}" added successfully! You can now start chatting.` });
+    const handleUserAdded = (friendRequest) => {
+      
+        const recipientUsername = friendRequest?.recipient?.username || friendRequest?.friendRequest?.recipient?.username || 'Unknown User';
+        setMessage({ type: 'success', text: `Friend request sent to "${recipientUsername}" successfully!` });
+        console.log(`Friend request sent to "${recipientUsername}" successfully`)
         
         setTimeout(() => setMessage({ type: '', text: '' }), 3000);
     };
@@ -147,9 +152,26 @@ function Dashboard() {
                     </div>
                 </div>
 
+                <div className="p-4 border-b border-zinc-700">
+                    <Link 
+                        to="/servers" 
+                        className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded mb-4 block text-center transition-colors"
+                    >
+                        Go to Servers
+                    </Link>
+                </div>
+
                 <AddUserForm 
                     onUserAdded={handleUserAdded}
                     onError={handleError}
+                />
+
+                <PendingRequests 
+                    onError={handleError}
+                    onRequestsUpdate={(count) => {
+                       
+                        console.log(`Pending requests count: ${count}`);
+                    }}
                 />
 
                 {message.text && (

@@ -6,7 +6,9 @@ class FriendController {
     static async sendFriendRequest(req, res) {
         try {
             const { recipientUsername } = req.body;
+            console.log(recipientUsername)
             const requesterId = req.user._id;
+            console.log(requesterId)
 
             if (!recipientUsername) {
                 return res.status(400).json({
@@ -69,6 +71,9 @@ class FriendController {
             await friendRequest.populate('requester', 'username email avatar role');
             await friendRequest.populate('recipient', 'username email avatar role');
 
+            // Log the names when request is sent
+            console.log(`Friend request sent - Requester: ${friendRequest.requester.username}, Recipient: ${friendRequest.recipient.username}`);
+
             res.status(201).json({
                 success: true,
                 message: 'Friend request sent successfully',
@@ -123,6 +128,9 @@ class FriendController {
             await friendRequest.populate('requester', 'username email avatar role');
             await friendRequest.populate('recipient', 'username email avatar role');
 
+            // Log the names when request is accepted
+            console.log(`Friend request accepted - Requester: ${friendRequest.requester.username}, Recipient: ${friendRequest.recipient.username}`);
+
             res.json({
                 success: true,
                 message: 'Friend request accepted',
@@ -169,6 +177,13 @@ class FriendController {
                     error: 'Not authorized to decline this request'
                 });
             }
+
+            // Log the names before declining the request
+            await friendRequest.populate('requester', 'username email avatar role');
+            await friendRequest.populate('recipient', 'username email avatar role');
+            
+            // Log the names when request is declined
+            console.log(`Friend request declined - Requester: ${friendRequest.requester.username}, Recipient: ${friendRequest.recipient.username}`);
 
             // Decline the friend request
             await friendRequest.decline();

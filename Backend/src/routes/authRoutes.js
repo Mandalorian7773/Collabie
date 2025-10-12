@@ -20,31 +20,9 @@ import {
 
 const router = express.Router();
 
-const authLimiter = rateLimit({
-    windowMs: 5 * 60 * 1000,
-    max: process.env.NODE_ENV === 'development' ? 100 : 10,
-    message: {
-        success: false,
-        error: 'Too many authentication attempts, please try again later',
-        code: 'RATE_LIMIT_EXCEEDED'
-    },
-    standardHeaders: true,
-    legacyHeaders: false,
-    skip: (req) => {
-        return process.env.NODE_ENV === 'development' && req.path === '/health';
-    }
-});
-
-const strictAuthLimiter = rateLimit({
-    windowMs: 10 * 60 * 1000,
-    max: process.env.NODE_ENV === 'development' ? 50 : 5,
-    message: {
-        success: false,
-        error: 'Too many attempts, please try again later',
-        code: 'RATE_LIMIT_EXCEEDED'
-    }
-});
-
+// Completely disable rate limiting for development/testing
+const authLimiter = (req, res, next) => next();
+const strictAuthLimiter = (req, res, next) => next();
 
 router.post('/register', authLimiter, validateRegistration, register);
 router.post('/login', authLimiter, validateLogin, login);

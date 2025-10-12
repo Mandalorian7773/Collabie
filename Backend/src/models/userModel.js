@@ -120,6 +120,7 @@ userSchema.statics.findByEmailOrUsername = function(identifier) {
 
 userSchema.methods.getPublicProfile = function() {
     return {
+        id: this._id.toString(), // Ensure ID is a string
         _id: this._id,
         username: this.username,
         email: this.email,
@@ -140,6 +141,10 @@ userSchema.set('toJSON', {
     transform: function(doc, ret) {
         delete ret.password;
         delete ret.__v;
+        // Ensure ID is properly formatted for GraphQL
+        if (ret._id) {
+            ret.id = ret._id.toString();
+        }
         return ret;
     }
 });

@@ -6,6 +6,8 @@ import Login from './Pages/Login';
 import Register from './Pages/Register';
 import Dashboard from './Pages/Dashboard';
 import NavBar from './components/NavBar';
+import ServerDashboard from './Pages/Server/ServerDashboard';
+import ServerPage from './Pages/Server/ServerPage';
 import './index.css';
 
 function App() {
@@ -26,6 +28,18 @@ function App() {
               </ProtectedRoute>
             } />
             
+            <Route path="/servers" element={
+              <ProtectedRoute>
+                <ServerDashboard />
+              </ProtectedRoute>
+            } />
+            
+            <Route path="/server/:serverId" element={
+              <ProtectedRoute>
+                <ServerPage />
+              </ProtectedRoute>
+            } />
+            
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
             
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
@@ -37,4 +51,3 @@ function App() {
 }
 
 export default App;
-

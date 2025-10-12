@@ -252,29 +252,6 @@ const authService = {
     },
 
 
-    async addUser(username) {
-        try {
-            const response = await api.post('/api/users/add', { username });
-            
-            if (response.data.success) {
-                return { 
-                    success: true, 
-                    user: response.data.user, 
-                    message: response.data.message 
-                };
-            }
-            
-            return { success: false, error: response.data.error };
-        } catch (error) {
-            console.error('Add user error:', error);
-            return {
-                success: false,
-                error: error.response?.data?.error || 'Failed to add user'
-            };
-        }
-    },
-
-
     async searchUsers(username) {
         try {
             const response = await api.get(`/api/users/search?username=${encodeURIComponent(username)}`);
@@ -337,6 +314,10 @@ const authService = {
     }
 };
 
+
+export const getAuthToken = () => {
+    return tokenStorage.getToken();
+};
 
 export { api };
 

@@ -1,7 +1,7 @@
 import express from 'express';
 import rateLimit from 'express-rate-limit';
 import { authMiddleware } from '../middleware/authMiddleware.js';
-import { addUser, searchUsers, getUsers, getConversations } from '../controllers/userController.js';
+import { searchUsers, getUsers, getConversations } from '../controllers/userController.js';
 
 const router = express.Router();
 
@@ -41,7 +41,8 @@ router.get('/conversations', readLimiter, getConversations);
 
 router.get('/search', readLimiter, searchUsers);
 
-router.post('/add', userLimiter, addUser);
+// Remove the old addUser route since we're using the friend system now
+// router.post('/add', userLimiter, addUser);
 
 
 router.get('/health', (req, res) => {
