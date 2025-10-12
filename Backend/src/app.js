@@ -21,19 +21,33 @@ export const createApp = async () => {
     app.use(express.urlencoded({ extended: true, limit: '10mb' }));
     app.use(cookieParser());
 
-    // Enhanced CORS configuration to allow all origins and endpoints
+    // Enhanced CORS configuration to allow specific origins
     const corsOptions = {
         origin: function (origin, callback) {
             // Allow requests with no origin (like mobile apps or curl requests)
             if (!origin) return callback(null, true);
+            
+            // List of allowed origins
+            const allowedOrigins = [
+                'http://localhost:5173',
+                'http://localhost:5174', 
+                'http://localhost:5175',
+                'https://colabie.netlify.app',
+                'https://collabie.onrender.com' // In case backend and frontend are on the same domain
+            ];
             
             // Allow all origins in development
             if (process.env.NODE_ENV === 'development') {
                 return callback(null, true);
             }
             
-            // Allow all origins in production (you might want to restrict this in production)
-            return callback(null, true);
+            // Check if the origin is in our allowed list
+            if (allowedOrigins.includes(origin)) {
+                return callback(null, true);
+            }
+            
+            // For production, be more restrictive
+            return callback(new Error('Not allowed by CORS'));
         },
         credentials: true,
         methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -51,7 +65,8 @@ export const createApp = async () => {
     console.log('✅ Apollo Server created successfully');
     
     // Apply GraphQL middleware with proper context
-    app.use('/graphql', expressMiddleware(apolloServer, {
+    // Also apply CORS specifically to GraphQL endpoint
+    app.use('/graphql', cors(corsOptions), expressMiddleware(apolloServer, {
       context: createContext
     }));
     

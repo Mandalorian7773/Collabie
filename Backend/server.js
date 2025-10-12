@@ -20,31 +20,20 @@ const startServer = async () => {
     // Create the HTTP server
     const server = http.createServer(app);
 
-    // Enhanced Socket.IO CORS configuration to allow localhost origins for development
-    const corsOrigins = process.env.CORS_ORIGIN 
-      ? process.env.CORS_ORIGIN.split(',').map(origin => origin.trim())
-      : [
-          'http://localhost:5173',
-          'http://localhost:5174', 
-          'http://localhost:5175',
-          'https://colabie.netlify.app',
-          // Allow all localhost origins for development
-          ...(process.env.NODE_ENV === 'development' ? ['*'] : [])
-        ];
-
-    // Always allow localhost origins for development/testing
+    // Enhanced Socket.IO CORS configuration to allow specific origins
     const allowedOrigins = [
       'http://localhost:5173',
       'http://localhost:5174', 
       'http://localhost:5175',
-      'https://colabie.netlify.app'
+      'https://colabie.netlify.app',
+      'https://collabie.onrender.com'
     ];
 
-    // In development, allow all origins
+    // Socket.IO CORS options
     const socketCorsOptions = {
       origin: process.env.NODE_ENV === 'development' 
-        ? '*' 
-        : allowedOrigins,
+        ? '*'  // Allow all origins in development
+        : allowedOrigins,  // Restrict to specific origins in production
       methods: ["GET", "POST"],
       credentials: true
     };
