@@ -46,11 +46,23 @@ api.interceptors.response.use(
     async (error) => {
         const originalRequest = error.config;
         
+        // Check if the error is due to an expired token and we haven't retried yet
         if (error.response?.status === 401 && !originalRequest._retry) {
             originalRequest._retry = true;
             
             try {
-                const refreshResponse = await api.post('/api/auth/refresh');
+                // Use the full URL for refresh to avoid baseURL prefix issues
+                const refreshResponse = await axios.post(
+                    `${config.API_BASE_URL}/api/auth/refresh`,
+                    {},
+                    {
+                        withCredentials: true,
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    }
+                );
+                
                 const { accessToken } = refreshResponse.data.tokens;
                 
                 tokenStorage.setToken(accessToken);
@@ -58,7 +70,7 @@ api.interceptors.response.use(
                 
                 return api(originalRequest);
             } catch (refreshError) {
-
+                console.error('Token refresh failed:', refreshError);
                 tokenStorage.clear();
                 window.location.href = '/login';
                 return Promise.reject(refreshError);
@@ -201,99 +213,19 @@ const authService = {
     },
 
 
-    async getConversations() {
-        try {
-            const response = await api.get('/api/users/conversations');
-            
-            if (response.data.success) {
-                return { 
-                    success: true, 
-                    conversations: response.data.conversations 
-                };
-            }
-            
-            return { success: false, error: response.data.error };
-        } catch (error) {
-            console.error('Get conversations error:', error);
-            return {
-                success: false,
-                error: error.response?.data?.error || 'Failed to get conversations'
-            };
-        }
-    },
-
-
-    async getUsers(params = {}) {
-        try {
-            const queryParams = new URLSearchParams();
-            
-            if (params.page) queryParams.append('page', params.page);
-            if (params.limit) queryParams.append('limit', params.limit);
-            if (params.search) queryParams.append('search', params.search);
-            
-            const response = await api.get(`/api/users?${queryParams}`);
-            
-            if (response.data.success) {
-                return { 
-                    success: true, 
-                    users: response.data.users, 
-                    pagination: response.data.pagination 
-                };
-            }
-            
-            return { success: false, error: response.data.error };
-        } catch (error) {
-            console.error('Get users error:', error);
-            return {
-                success: false,
-                error: error.response?.data?.error || 'Failed to get users'
-            };
-        }
-    },
-
-
-    async searchUsers(username) {
-        try {
-            const response = await api.get(`/api/users/search?username=${encodeURIComponent(username)}`);
-            
-            if (response.data.success) {
-                return { 
-                    success: true, 
-                    users: response.data.users 
-                };
-            }
-            
-            return { success: false, error: response.data.error };
-        } catch (error) {
-            console.error('Search users error:', error);
-            return {
-                success: false,
-                error: error.response?.data?.error || 'Failed to search users'
-            };
-        }
-    },
-
-
-    isAuthenticated() {
-        const token = tokenStorage.getToken();
-        const user = tokenStorage.getUser();
-        return !!(token && user);
-    },
-
-
-    getCurrentUser() {
-        return tokenStorage.getUser();
-    },
-
-
-    getCurrentToken() {
-        return tokenStorage.getToken();
-    },
-
-
     async refreshToken() {
         try {
-            const response = await api.post('/auth/refresh');
+            // Use axios directly to avoid baseURL prefix issues
+            const response = await axios.post(
+                `${config.API_BASE_URL}/api/auth/refresh`,
+                {},
+                {
+                    withCredentials: true,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                }
+            );
             
             if (response.data.success) {
                 const { user, tokens } = response.data;

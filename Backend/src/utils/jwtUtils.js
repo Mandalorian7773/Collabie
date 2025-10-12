@@ -73,9 +73,21 @@ class JWTUtils {
         await refreshToken.markAsUsed();
 
         const accessToken = this.generateAccessToken(refreshToken.userId);
+        const newRefreshTokenString = this.generateRefreshToken();
+        
+        const refreshTokenExpiry = new Date();
+        refreshTokenExpiry.setDate(refreshTokenExpiry.getDate() + 7);
+
+        await RefreshToken.createToken(
+            refreshToken.userId._id,
+            newRefreshTokenString,
+            refreshTokenExpiry,
+            refreshToken.deviceInfo
+        );
 
         return {
             accessToken,
+            refreshToken: newRefreshTokenString,
             expiresIn: process.env.JWT_ACCESS_EXPIRES_IN || '15m',
             tokenType: 'Bearer',
             user: refreshToken.userId.getPublicProfile()

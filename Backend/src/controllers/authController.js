@@ -47,9 +47,9 @@ export const register = async (req, res) => {
         res.cookie('refreshToken', tokens.refreshToken, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
-            sameSite: 'strict',
+            sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
             maxAge: 7 * 24 * 60 * 60 * 1000,
-            path: '/api/auth'
+            path: '/'
         });
 
         res.status(201).json({
@@ -125,9 +125,9 @@ export const login = async (req, res) => {
         res.cookie('refreshToken', tokens.refreshToken, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
-            sameSite: 'strict',
+            sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
             maxAge: 7 * 24 * 60 * 60 * 1000,
-            path: '/api/auth'
+            path: '/'
         });
 
         res.status(200).json({
@@ -154,6 +154,7 @@ export const login = async (req, res) => {
 
 export const refresh = async (req, res) => {
     try {
+        // Check for refresh token in cookies first, then in request body
         const refreshToken = req.cookies.refreshToken || req.body.refreshToken;
 
         if (!refreshToken) {
@@ -164,8 +165,16 @@ export const refresh = async (req, res) => {
             });
         }
 
-
         const result = await JWTUtils.refreshAccessToken(refreshToken);
+
+        // Set the new refresh token cookie
+        res.cookie('refreshToken', result.refreshToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
+            maxAge: 7 * 24 * 60 * 60 * 1000,
+            path: '/'
+        });
 
         res.status(200).json({
             success: true,
@@ -181,8 +190,12 @@ export const refresh = async (req, res) => {
     } catch (error) {
         console.error('Token refresh error:', error);
         
-
-        res.clearCookie('refreshToken', { path: '/api/auth' });
+        // Clear the refresh token cookie on error
+        res.clearCookie('refreshToken', { 
+            path: '/',
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict'
+        });
 
         if (error.message.includes('Invalid or expired refresh token')) {
             return res.status(401).json({
@@ -210,7 +223,11 @@ export const logout = async (req, res) => {
             await JWTUtils.revokeRefreshToken(refreshToken);
         }
 
-        res.clearCookie('refreshToken', { path: '/api/auth' });
+        res.clearCookie('refreshToken', { 
+            path: '/',
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict'
+        });
 
         res.status(200).json({
             success: true,
@@ -240,7 +257,11 @@ export const logoutAll = async (req, res) => {
 
         await JWTUtils.revokeAllUserTokens(req.user._id);
 
-        res.clearCookie('refreshToken', { path: '/api/auth' });
+        res.clearCookie('refreshToken', { 
+            path: '/',
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict'
+        });
 
         res.status(200).json({
             success: true,
