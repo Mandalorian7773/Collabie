@@ -32,6 +32,20 @@ const callSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
         required: true
+    },
+    settings: {
+        videoEnabled: {
+            type: Boolean,
+            default: true
+        },
+        audioEnabled: {
+            type: Boolean,
+            default: true
+        },
+        screenSharingEnabled: {
+            type: Boolean,
+            default: false
+        }
     }
 }, {
     timestamps: true

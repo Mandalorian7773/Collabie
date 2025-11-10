@@ -10,11 +10,13 @@ router.use(authMiddleware);
 // GET routes
 router.get('/room/:roomId', CallController.getActiveCallsByRoom);
 router.get('/user/:userId', CallController.getActiveCallsByUser);
+router.get('/details/:callId', CallController.getCallDetails);
 
 // POST routes
 router.post('/start', CallController.startCall);
 router.post('/join/:callId', CallController.joinCall);
 router.post('/leave/:callId', CallController.leaveCall);
 router.post('/end/:callId', CallController.endCall);
+router.post('/settings/:callId', CallController.updateCallSettings);
 
 export default router;

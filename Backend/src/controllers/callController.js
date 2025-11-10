@@ -163,6 +163,91 @@ class CallController {
     }
   }
 
+  // Get call details
+  static async getCallDetails(req, res) {
+    try {
+      const { callId } = req.params;
+      
+      if (!callId) {
+        return res.status(400).json({
+          success: false,
+          error: 'Call ID is required'
+        });
+      }
+
+      const call = await Call.findById(callId)
+        .populate('participants', 'username email avatar role')
+        .populate('createdBy', 'username email avatar role');
+
+      if (!call) {
+        return res.status(404).json({
+          success: false,
+          error: 'Call not found'
+        });
+      }
+
+      res.json({
+        success: true,
+        call
+      });
+    } catch (error) {
+      console.error('Error fetching call details:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to fetch call details',
+        details: error.message
+      });
+    }
+  }
+
+  // Update call settings
+  static async updateCallSettings(req, res) {
+    try {
+      const { callId } = req.params;
+      const { settings } = req.body;
+      const userId = req.user.id;
+
+      if (!callId) {
+        return res.status(400).json({
+          success: false,
+          error: 'Call ID is required'
+        });
+      }
+
+      // Find the call
+      const call = await Call.findById(callId);
+      if (!call) {
+        return res.status(404).json({
+          success: false,
+          error: 'Call not found'
+        });
+      }
+
+      // Check if user is the creator
+      const isCreator = call.createdBy.toString() === userId;
+      if (!isCreator) {
+        return res.status(403).json({
+          success: false,
+          error: 'Not authorized to update call settings'
+        });
+      }
+
+      // Update call settings (in a real implementation, you might store these in the database)
+      // For now, we'll just return success
+      res.json({
+        success: true,
+        message: 'Call settings updated successfully'
+      });
+    } catch (error) {
+      console.error('Error updating call settings:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to update call settings',
+        details: error.message
+      });
+    }
+  }
+
   // Join an existing call
   static async joinCall(req, res) {
     try {

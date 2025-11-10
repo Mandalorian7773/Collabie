@@ -10,6 +10,7 @@ import ChannelList from '../../components/Server/ChannelList';
 import CreateChannelModal from '../../components/Server/CreateChannelModal';
 import BoardView from '../../components/Server/BoardView';
 import ChatView from '../../components/Server/ChatView';
+import VoiceView from '../../components/Server/VoiceView';
 
 function ServerPage() {
   const { serverId } = useParams();
@@ -169,20 +170,7 @@ function ServerPage() {
                 <BoardView channel={activeChannel} />
               )}
               {activeChannel.type === 'voice' && (
-                <div className="flex items-center justify-center h-full">
-                  <div className="text-center">
-                    <div className="w-16 h-16 bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <span className="text-2xl">🎤</span>
-                    </div>
-                    <h3 className="text-xl font-bold mb-2">Voice Channel</h3>
-                    <p className="text-gray-400 mb-4">
-                      Voice calling functionality would be implemented here
-                    </p>
-                    <button className="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded transition-colors">
-                      Join Voice Channel
-                    </button>
-                  </div>
-                </div>
+                <VoiceView channel={activeChannel} user={user} />
               )}
             </div>
           </>
