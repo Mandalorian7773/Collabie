@@ -82,167 +82,227 @@ api.interceptors.response.use(
 );
 
 
+// Separate function definitions to avoid minification issues
+async function register(userData) {
+    try {
+        const response = await api.post('/api/auth/register', userData);
+        
+        if (response.data.success) {
+            const { user, tokens } = response.data;
+            tokenStorage.setToken(tokens.accessToken);
+            tokenStorage.setUser(user);
+            return { success: true, user, message: response.data.message };
+        }
+        
+        return { success: false, error: response.data.error };
+    } catch (error) {
+        console.error('Registration error:', error);
+        return {
+            success: false,
+            error: error.response?.data?.error || 'Registration failed. Please try again.',
+            details: error.response?.data?.details
+        };
+    }
+}
+
+async function login(credentials) {
+    try {
+        const response = await api.post('/api/auth/login', credentials);
+        
+        if (response.data.success) {
+            const { user, tokens } = response.data;
+            tokenStorage.setToken(tokens.accessToken);
+            tokenStorage.setUser(user);
+            return { success: true, user, message: response.data.message };
+        }
+        
+        return { success: false, error: response.data.error };
+    } catch (error) {
+        console.error('Login error:', error);
+        return {
+            success: false,
+            error: error.response?.data?.error || 'Login failed. Please try again.',
+            details: error.response?.data?.details
+        };
+    }
+}
+
+async function logout() {
+    try {
+        await api.post('/api/auth/logout');
+    } catch (error) {
+        console.error('Logout error:', error);
+    } finally {
+        tokenStorage.clear();
+    }
+}
+
+async function logoutAll() {
+    try {
+        await api.post('/api/auth/logout-all');
+    } catch (error) {
+        console.error('Logout all error:', error);
+    } finally {
+        tokenStorage.clear();
+    }
+}
+
+async function getProfile() {
+    try {
+        const response = await api.get('/api/auth/me');
+        
+        if (response.data.success) {
+            const { user } = response.data;
+            tokenStorage.setUser(user);
+            return { success: true, user };
+        }
+        
+        return { success: false, error: response.data.error };
+    } catch (error) {
+        console.error('Get profile error:', error);
+        return {
+            success: false,
+            error: error.response?.data?.error || 'Failed to get profile'
+        };
+    }
+}
+
+async function updateProfile(profileData) {
+    try {
+        const response = await api.put('/api/auth/profile', profileData);
+        
+        if (response.data.success) {
+            const { user } = response.data;
+            tokenStorage.setUser(user);
+            return { success: true, user, message: response.data.message };
+        }
+        
+        return { success: false, error: response.data.error };
+    } catch (error) {
+        console.error('Update profile error:', error);
+        return {
+            success: false,
+            error: error.response?.data?.error || 'Failed to update profile'
+        };
+    }
+}
+
+async function changePassword(passwordData) {
+    try {
+        const response = await api.put('/api/auth/change-password', passwordData);
+        
+        if (response.data.success) {
+            return { success: true, message: response.data.message };
+        }
+        
+        return { success: false, error: response.data.error };
+    } catch (error) {
+        console.error('Change password error:', error);
+        return {
+            success: false,
+            error: error.response?.data?.error || 'Failed to change password'
+        };
+    }
+}
+
+// Add the missing getConversations function
+async function getConversations() {
+    try {
+        const response = await api.get('/api/users/conversations');
+        
+        if (response.data.success) {
+            return { 
+                success: true, 
+                conversations: response.data.conversations 
+            };
+        }
+        
+        return { success: false, error: response.data.error };
+    } catch (error) {
+        console.error('Get conversations error:', error);
+        return {
+            success: false,
+            error: error.response?.data?.error || 'Failed to get conversations'
+        };
+    }
+}
+
+async function refreshToken() {
+    try {
+        // Use axios directly to avoid baseURL prefix issues
+        const response = await axios.post(
+            `${config.API_BASE_URL}/api/auth/refresh`,
+            {},
+            {
+                withCredentials: true,
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }
+        );
+        
+        if (response.data.success) {
+            const { user, tokens } = response.data;
+            tokenStorage.setToken(tokens.accessToken);
+            tokenStorage.setUser(user);
+            return { success: true, user };
+        }
+        
+        return { success: false, error: response.data.error };
+    } catch (error) {
+        console.error('Token refresh error:', error);
+        tokenStorage.clear();
+        return {
+            success: false,
+            error: error.response?.data?.error || 'Session expired'
+        };
+    }
+}
+
 const authService = {
 
-    async register(userData) {
-        try {
-            const response = await api.post('/api/auth/register', userData);
-            
-            if (response.data.success) {
-                const { user, tokens } = response.data;
-                tokenStorage.setToken(tokens.accessToken);
-                tokenStorage.setUser(user);
-                return { success: true, user, message: response.data.message };
-            }
-            
-            return { success: false, error: response.data.error };
-        } catch (error) {
-            console.error('Registration error:', error);
-            return {
-                success: false,
-                error: error.response?.data?.error || 'Registration failed. Please try again.',
-                details: error.response?.data?.details
-            };
-        }
+    isAuthenticated: function() {
+        return !!tokenStorage.getToken();
     },
 
-
-    async login(credentials) {
-        try {
-            const response = await api.post('/api/auth/login', credentials);
-            
-            if (response.data.success) {
-                const { user, tokens } = response.data;
-                tokenStorage.setToken(tokens.accessToken);
-                tokenStorage.setUser(user);
-                return { success: true, user, message: response.data.message };
-            }
-            
-            return { success: false, error: response.data.error };
-        } catch (error) {
-            console.error('Login error:', error);
-            return {
-                success: false,
-                error: error.response?.data?.error || 'Login failed. Please try again.',
-                details: error.response?.data?.details
-            };
-        }
+    getCurrentUser: function() {
+        return tokenStorage.getUser();
     },
 
-
-    async logout() {
-        try {
-            await api.post('/api/auth/logout');
-        } catch (error) {
-            console.error('Logout error:', error);
-        } finally {
-            tokenStorage.clear();
-        }
+    register: function(userData) {
+        return register(userData);
     },
 
-
-    async logoutAll() {
-        try {
-            await api.post('/api/auth/logout-all');
-        } catch (error) {
-            console.error('Logout all error:', error);
-        } finally {
-            tokenStorage.clear();
-        }
+    login: function(credentials) {
+        return login(credentials);
     },
 
-
-    async getProfile() {
-        try {
-            const response = await api.get('/api/auth/me');
-            
-            if (response.data.success) {
-                const { user } = response.data;
-                tokenStorage.setUser(user);
-                return { success: true, user };
-            }
-            
-            return { success: false, error: response.data.error };
-        } catch (error) {
-            console.error('Get profile error:', error);
-            return {
-                success: false,
-                error: error.response?.data?.error || 'Failed to get profile'
-            };
-        }
+    logout: function() {
+        return logout();
     },
 
-
-    async updateProfile(profileData) {
-        try {
-            const response = await api.put('/api/auth/profile', profileData);
-            
-            if (response.data.success) {
-                const { user } = response.data;
-                tokenStorage.setUser(user);
-                return { success: true, user, message: response.data.message };
-            }
-            
-            return { success: false, error: response.data.error };
-        } catch (error) {
-            console.error('Update profile error:', error);
-            return {
-                success: false,
-                error: error.response?.data?.error || 'Failed to update profile'
-            };
-        }
+    logoutAll: function() {
+        return logoutAll();
     },
 
-
-    async changePassword(passwordData) {
-        try {
-            const response = await api.put('/api/auth/change-password', passwordData);
-            
-            if (response.data.success) {
-                return { success: true, message: response.data.message };
-            }
-            
-            return { success: false, error: response.data.error };
-        } catch (error) {
-            console.error('Change password error:', error);
-            return {
-                success: false,
-                error: error.response?.data?.error || 'Failed to change password'
-            };
-        }
+    getProfile: function() {
+        return getProfile();
     },
 
+    updateProfile: function(profileData) {
+        return updateProfile(profileData);
+    },
 
-    async refreshToken() {
-        try {
-            // Use axios directly to avoid baseURL prefix issues
-            const response = await axios.post(
-                `${config.API_BASE_URL}/api/auth/refresh`,
-                {},
-                {
-                    withCredentials: true,
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                }
-            );
-            
-            if (response.data.success) {
-                const { user, tokens } = response.data;
-                tokenStorage.setToken(tokens.accessToken);
-                tokenStorage.setUser(user);
-                return { success: true, user };
-            }
-            
-            return { success: false, error: response.data.error };
-        } catch (error) {
-            console.error('Token refresh error:', error);
-            tokenStorage.clear();
-            return {
-                success: false,
-                error: error.response?.data?.error || 'Session expired'
-            };
-        }
+    changePassword: function(passwordData) {
+        return changePassword(passwordData);
+    },
+
+    getConversations: function() {
+        return getConversations();
+    },
+
+    refreshToken: function() {
+        return refreshToken();
     }
 };
 
