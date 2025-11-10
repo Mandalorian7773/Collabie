@@ -146,6 +146,46 @@ const initSockets = (io) => {
         socket.on('error', (error) => {
             console.error(`🔥 Socket error for ${socket.id}:`, error);
         });
+
+        // Direct call events
+        socket.on('start-direct-call', (data) => {
+            const { targetUserId, senderUserId, callType } = data;
+            
+            if (!targetUserId || !senderUserId) {
+                socket.emit('call-error', { 
+                    message: 'Target user ID and sender user ID are required' 
+                });
+                return;
+            }
+
+            // Notify target user about incoming call
+            socket.to(targetUserId).emit('incoming-direct-call', {
+                callerUserId: senderUserId,
+                callType,
+                timestamp: new Date()
+            });
+
+            console.log(`📞 Direct call started from ${senderUserId} to ${targetUserId}`);
+        });
+
+        socket.on('end-direct-call', (data) => {
+            const { targetUserId, senderUserId } = data;
+            
+            if (!targetUserId || !senderUserId) {
+                socket.emit('call-error', { 
+                    message: 'Target user ID and sender user ID are required' 
+                });
+                return;
+            }
+
+            // Notify target user about call end
+            socket.to(targetUserId).emit('direct-call-ended', {
+                callerUserId: senderUserId,
+                timestamp: new Date()
+            });
+
+            console.log(`📞 Direct call ended between ${senderUserId} and ${targetUserId}`);
+        });
     });
 
     // Initialize call sockets

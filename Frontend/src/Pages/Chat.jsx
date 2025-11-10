@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import socket from "../../socket.js";
 import messageService from '../services/messageService.js';
+import callService from '../services/callService.js';
 
 function Chat({ currentUser, activeUser }) {
     const [input, setInput] = useState("");
@@ -8,6 +9,8 @@ function Chat({ currentUser, activeUser }) {
     const [isLoading, setIsLoading] = useState(false);
     const [isTyping, setIsTyping] = useState(false);
     const [typingUser, setTypingUser] = useState(null);
+    const [isInCall, setIsInCall] = useState(false);
+    const [callType, setCallType] = useState('audio');
     const messagesEndRef = useRef(null);
     const messagesContainerRef = useRef(null);
 
@@ -86,10 +89,32 @@ function Chat({ currentUser, activeUser }) {
         const handleReadStatusUpdated = (data) => {
         };
 
+        // Call event handlers
+        const handleIncomingCall = (data) => {
+            console.log('Incoming call:', data);
+            // In a real implementation, you would show a call notification
+            // For now, we'll just log it
+            alert(`${data.callerUserId} is calling you`);
+        };
+
+        const handleCallEnded = (data) => {
+            console.log('Call ended:', data);
+            setIsInCall(false);
+        };
+
+        const handleCallError = (data) => {
+            console.error('Call error:', data);
+            alert('Call error: ' + data.message);
+            setIsInCall(false);
+        };
+
         socket.on('receiveMessage', handleReceiveMessage);
         socket.on('messagesMarkedAsRead', handleMessagesMarkedAsRead);
         socket.on('userTyping', handleUserTyping);
         socket.on('readStatusUpdated', handleReadStatusUpdated);
+        socket.on('incoming-direct-call', handleIncomingCall);
+        socket.on('direct-call-ended', handleCallEnded);
+        socket.on('call-error', handleCallError);
 
         socket.on('error', (error) => {
             console.error('Socket error:', error);
@@ -100,6 +125,9 @@ function Chat({ currentUser, activeUser }) {
             socket.off('messagesMarkedAsRead', handleMessagesMarkedAsRead);
             socket.off('userTyping', handleUserTyping);
             socket.off('readStatusUpdated', handleReadStatusUpdated);
+            socket.off('incoming-direct-call', handleIncomingCall);
+            socket.off('direct-call-ended', handleCallEnded);
+            socket.off('call-error', handleCallError);
             socket.off('error');
         };
     }, [currentUser, activeUser]);
@@ -116,6 +144,74 @@ function Chat({ currentUser, activeUser }) {
     useEffect(() => {
         scrollToBottom();
     }, [messages]);
+
+    const startCall = (type) => {
+        setCallType(type);
+        setIsInCall(true);
+        
+        // Emit call start event
+        socket.emit('start-direct-call', {
+            targetUserId: activeUser._id,
+            senderUserId: currentUser._id,
+            callType: type
+        });
+    };
+
+    const endCall = () => {
+        setIsInCall(false);
+        
+        // Emit call end event
+        socket.emit('end-direct-call', {
+            targetUserId: activeUser._id,
+            senderUserId: currentUser._id
+        });
+    };
+
+    if (isInCall) {
+        return (
+            <div className="h-full flex flex-col text-white bg-zinc-800">
+                <div className="flex items-center justify-between border-b border-zinc-700 p-4 bg-zinc-900 flex-shrink-0">
+                    <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
+                            <span className="text-white font-bold">
+                                {activeUser.name?.charAt(0).toUpperCase() || 'U'}
+                            </span>
+                        </div>
+                        <div>
+                            <h2 className="text-xl font-bold">{activeUser.name || 'Unknown User'}</h2>
+                            <p className="text-sm text-zinc-400">In Call</p>
+                        </div>
+                    </div>
+                    <button 
+                        onClick={endCall}
+                        className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded"
+                    >
+                        End Call
+                    </button>
+                </div>
+                
+                <div className="flex-1 flex items-center justify-center bg-zinc-900">
+                    <div className="text-center">
+                        <div className="w-24 h-24 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                            <span className="text-4xl">
+                                {activeUser.name?.charAt(0).toUpperCase() || 'U'}
+                            </span>
+                        </div>
+                        <h3 className="text-2xl font-bold mb-2">{activeUser.name || 'User'}</h3>
+                        <p className="text-zinc-400 mb-6">{callType === 'video' ? 'Video Call' : 'Voice Call'}</p>
+                        <div className="flex justify-center space-x-6">
+                            <button
+                                onClick={endCall}
+                                className="w-16 h-16 bg-red-600 hover:bg-red-700 rounded-full flex items-center justify-center transition-colors"
+                            >
+                                📞
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     const handleSendMessage = async () => {
         if (!input.trim() || !currentUser || !activeUser) return;
@@ -205,10 +301,16 @@ function Chat({ currentUser, activeUser }) {
                     </div>
                 </div>
                 <div className="gap-4 flex">
-                    <button className="text-zinc-400 hover:text-white px-3 py-1 rounded">
+                    <button 
+                        onClick={() => startCall('audio')}
+                        className="text-zinc-400 hover:text-white px-3 py-1 rounded hover:bg-zinc-700 transition-colors"
+                    >
                         Call
                     </button>
-                    <button className="text-zinc-400 hover:text-white px-3 py-1 rounded">
+                    <button 
+                        onClick={() => startCall('video')}
+                        className="text-zinc-400 hover:text-white px-3 py-1 rounded hover:bg-zinc-700 transition-colors"
+                    >
                         Video Call
                     </button>
                 </div>
